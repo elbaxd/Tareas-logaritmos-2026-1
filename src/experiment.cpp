@@ -20,12 +20,16 @@ namespace {
 
 using Clock = std::chrono::steady_clock;
 
-// Mide milisegundos entre dos puntos del reloj.
+// Mide milisegundos entre dos tiempos.
+//  start, end: timestamps del reloj.
+//  ret: diferencia en milisegundos.
 double elapsedMs(Clock::time_point start, Clock::time_point end) {
     return std::chrono::duration<double, std::milli>(end - start).count();
 }
 
 // Empareja un metodo de bulk-loading con su funcion de construccion.
+//  name: nombre del metodo.
+//  build: puntero a la funcion que construye el R-tree.
 struct Method {
     const char* name;
     std::vector<Node> (*build)(const std::vector<Point>&);
@@ -36,14 +40,20 @@ const Method METHODS[] = {
     {"str",       buildSTR},
 };
 
-// Referencia a un dataset (no-owning), usada para iterar sobre los conjuntos
+// Referencia a un dataset, usada para iterar sobre los conjuntos
 // "random" y "europa" sin copiar los vectores grandes.
+//  name: nombre del dataset.
+//  points: puntero al vector de puntos
 struct DatasetRef {
     const char* name;
     const std::vector<Point>* points;
 };
 
-// Genera 'count' cuadrados aleatorios de lado s en [0,1] x [0,1].
+// Genera (count) cuadrados aleatorios de lado s en [0,1] x [0,1].
+//  s: largo del lado del cuadrado.
+//  count: cantidad de cuadrados a generar.
+//  rng: generador random
+//  ret: vector de MBRs cuadrados
 std::vector<MBR> generateQueries(double s, std::size_t count, std::mt19937& rng) {
     const double upper = std::max(0.0, 1.0 - s);
     std::uniform_real_distribution<double> dist(0.0, upper);
@@ -63,6 +73,8 @@ std::vector<MBR> generateQueries(double s, std::size_t count, std::mt19937& rng)
 }
 
 // Calcula media y desviacion estandar (poblacional) de un vector.
+//  v: vector de valores.
+//  ret: el par (media, desviacion estandar).
 std::pair<double, double> meanStd(const std::vector<double>& v) {
     if (v.empty()) return {0.0, 0.0};
     double sum = 0;
@@ -76,11 +88,16 @@ std::pair<double, double> meanStd(const std::vector<double>& v) {
 
 } // namespace
 
-// Subcomando 'experiment': barre N en {2^15, ..., 2^24}, mide tiempos de
-// construccion para los 4 (dataset, metodo) y guarda los arboles finales
-// (N=2^24) a disco. Luego corre 100 consultas para cada s en
-// {0.0025, 0.005, 0.01, 0.025, 0.05} sobre cada uno de los arboles
+// Subcomando 'experiment': itera N en {2^15, ..., 2^24}, mide tiempos de construccion para los 4 (dataset, metodo) 
+// y guarda los arboles finales (N=2^24) a disco. 
+// 
+// Luego corre 100 consultas para cada s en {0.0025, 0.005, 0.01, 0.025, 0.05} sobre cada uno de los arboles
 // guardados, midiendo lecturas y puntos encontrados.
+// 
+//  random_path: archivo binario del dataset aleatorio.
+//  europa_path: archivo binario del dataset Europa.
+//  out_dir: directorio donde se escribiran resultados y arboles.
+//  ret: 0 en exito.
 int runExperiment(const std::string& random_path,
                   const std::string& europa_path,
                   const std::string& out_dir) {
@@ -182,9 +199,14 @@ int runExperiment(const std::string& random_path,
     return 0;
 }
 
-// Subcomando 'bonus': construye un R-tree (con STR) sobre el dataset
-// europa_bonus.bin (sin normalizar) y ejecuta una consulta sobre el
-// rectangulo entregado. Escribe los puntos encontrados a un CSV (x, y).
+// Subcomando 'bonus': construye un R-tree (con STR) sobre el dataset europa_bonus.bin (sin normalizar) y ejecuta una
+// consulta sobre el rectangulo entregado. 
+// Escribe los puntos encontrados a un CSV (x, y).
+// 
+//  path: archivo binario del dataset bonus (coordenadas reales).
+//  query: rectangulo de consulta en coordenadas reales.
+//  out_path: ruta del archivo CSV de salida.
+//  ret: 0 en exito.
 int runBonus(const std::string& path,
              const MBR& query,
              const std::string& out_path) {

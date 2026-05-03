@@ -41,10 +41,17 @@ static_assert(sizeof(Node) == NODE_SIZE, "Node debe medir 4096 bytes");
 // True si el nodo es una hoja (sus hijos son puntos).
 // Convencion: en una hoja, todas las entradas tienen child_idx == -1; basta
 // con revisar la primera por ser todas del mismo tipo dentro de un nodo.
+//  n: nodo a consultar.
+//  ret: true si n es hoja.
 bool isLeaf(const Node& n);
 
 // MBR que envuelve a las primeras k entradas del nodo.
+//  n: nodo cuyas entradas se envuelven.
+//  ret: MBR de las k entradas de n.
 MBR computeNodeMBR(const Node& n);
 
 // MBR que envuelve a un rango contiguo de entradas.
+//  entries: puntero al inicio del rango de entradas.
+//  count: cantidad de entradas en el rango.
+//  ret: MBR que envuelve las count entradas.
 MBR computeRangeMBR(const Entry* entries, std::size_t count);

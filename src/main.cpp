@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-// Funciones implementadas en experiment.cpp.
+// Funciones implementadas en experiment.cpp
 int runExperiment(const std::string& random_path,
                   const std::string& europa_path,
                   const std::string& out_dir);
@@ -21,6 +21,7 @@ int runBonus(const std::string& path,
 
 namespace {
 
+// Imprime las instrucciones de uso
 void usage() {
     std::cerr <<
         "Uso:\n"
@@ -33,7 +34,10 @@ void usage() {
         "--out <results.csv>\n";
 }
 
-// Busca un argumento --flag y retorna su valor (o nullptr si no esta).
+// Busca el argumento --flag y retorna su valor (o nullptr si no esta)
+//  argc, argv: argumentos del comando
+//  flag: nombre del flag a buscar (considera --)
+//  ret: valor del flag, o nullptr si no se encuentra
 const char* getOpt(int argc, char** argv, const std::string& flag) {
     for (int i = 1; i < argc - 1; ++i) {
         if (flag == argv[i]) return argv[i + 1];
@@ -41,7 +45,10 @@ const char* getOpt(int argc, char** argv, const std::string& flag) {
     return nullptr;
 }
 
-// Extrae los 4 floats de --rect x1 x2 y1 y2. Retorna false si no esta.
+// Extrae los 4 floats de --rect x1 x2 y1 y2, o retorna false si no esta.
+//  argc, argv: argumentos del comando
+//  mbr: destino del rectangulo parseado (se sobreescribe!
+//  ret: true si se encontro  --rect con 4 valores numericos válidos
 bool getRect(int argc, char** argv, MBR& mbr) {
     for (int i = 1; i < argc; ++i) {
         if (std::string("--rect") == argv[i] && i + 4 < argc) {
@@ -55,6 +62,11 @@ bool getRect(int argc, char** argv, MBR& mbr) {
     return false;
 }
 
+// Subcomando build: construye un R-tree desde un archivo de puntos y lo guarda a disco
+// Lee los flags --method, --in, --N, --out de argv
+// 
+//  argc, argv: argumentos de linea de comandos.
+//  ret: 0 en exito, 1 en error de uso
 int cmdBuild(int argc, char** argv) {
     const char* method = getOpt(argc, argv, "--method");
     const char* in_path = getOpt(argc, argv, "--in");
@@ -84,6 +96,11 @@ int cmdBuild(int argc, char** argv) {
     return 0;
 }
 
+// Subcomando query: consulta puntos contenidos en un rectangulo sobre un R-tree serializado en disco
+//  Lee los flags --tree, --rect de argv.
+// 
+//  argc, argv: argumentos del comando
+//  ret: 0 en exito, 1 en error de uso
 int cmdQuery(int argc, char** argv) {
     const char* tree_path = getOpt(argc, argv, "--tree");
     if (!tree_path) { usage(); return 1; }
@@ -99,6 +116,11 @@ int cmdQuery(int argc, char** argv) {
     return 0;
 }
 
+// Subcomando experiment: ejecuta el experimento completo de construccion y consultas sobre ambos datasets.
+//  Lee los flags --random, --europa, --out-dir.
+// 
+//  argc, argv: argumentos del comanodo
+//  ret: 0 en exito, 1 en error de uso.
 int cmdExperiment(int argc, char** argv) {
     const char* rnd = getOpt(argc, argv, "--random");
     const char* eur = getOpt(argc, argv, "--europa");
@@ -107,6 +129,11 @@ int cmdExperiment(int argc, char** argv) {
     return runExperiment(rnd, eur, out);
 }
 
+// Subcomando bonus: consulta el dataset bonus (coordenadas reales no normalizadas) y escribe los puntos encontrados a un CSV. 
+// Lee los flags --in, --rect, --out de argv.
+// 
+//  argc, argv: argumentos delcomando
+//  ret: 0 en exito, 1 en error de uso
 int cmdBonus(int argc, char** argv) {
     const char* in = getOpt(argc, argv, "--in");
     const char* out = getOpt(argc, argv, "--out");
@@ -118,6 +145,10 @@ int cmdBonus(int argc, char** argv) {
 
 } // namespace
 
+// Punto de entrada del programa. Actua como despachador al comando que se invoque (build, query, experiment, bonus) segun argv[1]
+// 
+//  argc, argv: argumentos del comando
+//  ret: 0 en exito, 1 en error de uso, 2 en error de ejecucion
 int main(int argc, char** argv) {
     if (argc < 2) { usage(); return 1; }
     const std::string cmd = argv[1];
