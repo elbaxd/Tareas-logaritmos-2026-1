@@ -7,10 +7,9 @@
 
 namespace {
 
-// Recorrido recursivo del arbol leyendo cada nodo desde disco. La consulta
-// nunca usa el vector en RAM utilizado durante la construccion: solo lee el
-// archivo binario serializado, por lo que cada acceso cuenta para
-// g_disk_reads.
+// Recorrido recursivo del arbol leyendo cada nodo desde disco
+// No usa el vector en RAM utilizado durante la construccion, sino que lee el  archivo binario 
+// serializado, por lo que cada acceso cuenta para g_disk_reads.
 void queryRecursive(std::ifstream& in,
                     std::int32_t idx,
                     const MBR& query,

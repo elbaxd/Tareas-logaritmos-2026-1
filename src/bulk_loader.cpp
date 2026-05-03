@@ -82,7 +82,7 @@ void nearestXRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
 
 // Recursion STR: en cada nivel hace slicing 2D antes de empacar. Ordena por
 // X, parte en S = ceil(sqrt(n/B)) slices verticales, ordena cada slice por Y
-// y lo parte en grupos de tamano B. Total de grupos ~= n/B.
+// y lo parte en grupos de tamanio B. Total de grupos ~= n/B.
 void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
     if (entries.size() <= static_cast<std::size_t>(B)) {
         writeRoot(tree, entries);
@@ -110,7 +110,7 @@ void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
                   entries.begin() + static_cast<std::ptrdiff_t>(slice_end),
                   cmpCenterY);
 
-        // Partir el slice en grupos de tamano B.
+        // Partir el slice en grupos de tamanio B.
         for (std::size_t i = slice_start; i < slice_end; i += B) {
             const std::size_t count = std::min(static_cast<std::size_t>(B),
                                                slice_end - i);
