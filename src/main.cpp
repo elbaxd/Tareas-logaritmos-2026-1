@@ -12,12 +12,8 @@
 #include <vector>
 
 // Funciones implementadas en experiment.cpp
-int runExperiment(const std::string& random_path,
-                  const std::string& europa_path,
-                  const std::string& out_dir);
-int runBonus(const std::string& path,
-             const MBR& query,
-             const std::string& out_path);
+int runExperiment(const std::string& random_path, const std::string& europa_path, const std::string& out_dir);
+int runBonus(const std::string& path, const MBR& query, const std::string& out_path);
 
 namespace {
 
@@ -42,6 +38,7 @@ const char* getOpt(int argc, char** argv, const std::string& flag) {
     for (int i = 1; i < argc - 1; ++i) {
         if (flag == argv[i]) return argv[i + 1];
     }
+
     return nullptr;
 }
 
@@ -56,9 +53,11 @@ bool getRect(int argc, char** argv, MBR& mbr) {
             mbr.x2 = std::stof(argv[i + 2]);
             mbr.y1 = std::stof(argv[i + 3]);
             mbr.y2 = std::stof(argv[i + 4]);
+            
             return true;
         }
     }
+
     return false;
 }
 
@@ -86,13 +85,12 @@ int cmdBuild(int argc, char** argv) {
         std::cerr << "Metodo desconocido: " << method << "\n";
         return 1;
     }
+
     const auto t1 = std::chrono::steady_clock::now();
     const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
     writeTreeBin(out_path, tree);
-    std::cerr << "Construido " << method
-              << " con " << points.size() << " puntos en "
-              << ms << " ms (" << tree.size() << " nodos). "
-              << "Archivo: " << out_path << "\n";
+    std::cerr << "Construido " << method << " con " << points.size() << " puntos en " << ms << " ms (" << tree.size() << " nodos). " << "Archivo: " << out_path << "\n";
+
     return 0;
 }
 
@@ -104,15 +102,17 @@ int cmdBuild(int argc, char** argv) {
 int cmdQuery(int argc, char** argv) {
     const char* tree_path = getOpt(argc, argv, "--tree");
     if (!tree_path) { usage(); return 1; }
+    
     MBR rect{};
     if (!getRect(argc, argv, rect)) { usage(); return 1; }
     resetReadCounter();
+    
     const auto results = queryRange(tree_path, rect);
     for (const auto& p : results) {
         std::cout << p.x << " " << p.y << "\n";
     }
-    std::cerr << "Puntos encontrados: " << results.size()
-              << " | Lecturas: " << g_disk_reads << "\n";
+
+    std::cerr << "Puntos encontrados: " << results.size() << " | Lecturas: " << g_disk_reads << "\n";
     return 0;
 }
 
@@ -126,6 +126,7 @@ int cmdExperiment(int argc, char** argv) {
     const char* eur = getOpt(argc, argv, "--europa");
     const char* out = getOpt(argc, argv, "--out-dir");
     if (!rnd || !eur || !out) { usage(); return 1; }
+    
     return runExperiment(rnd, eur, out);
 }
 
@@ -138,8 +139,10 @@ int cmdBonus(int argc, char** argv) {
     const char* in = getOpt(argc, argv, "--in");
     const char* out = getOpt(argc, argv, "--out");
     if (!in || !out) { usage(); return 1; }
+    
     MBR rect{};
     if (!getRect(argc, argv, rect)) { usage(); return 1; }
+
     return runBonus(in, rect, out);
 }
 
@@ -161,6 +164,7 @@ int main(int argc, char** argv) {
         std::cerr << "Error: " << e.what() << "\n";
         return 2;
     }
+    
     usage();
     return 1;
 }

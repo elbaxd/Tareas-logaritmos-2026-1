@@ -14,10 +14,7 @@ namespace {
 //  idx:   indice del nodo a procesar
 //  query: rectangulo de busqueda
 //  out:   vector donde se acumulan los puntos encontrados
-void queryRecursive(std::ifstream& in,
-                    std::int32_t idx,
-                    const MBR& query,
-                    std::vector<Point>& out) {
+void queryRecursive(std::ifstream& in, std::int32_t idx, const MBR& query, std::vector<Point>& out) {
     Node node;
     readNode(in, idx, node);
 
@@ -30,8 +27,10 @@ void queryRecursive(std::ifstream& in,
                 out.push_back(Point{x, y});
             }
         }
+
         return;
     }
+
     for (std::int32_t i = 0; i < node.k; ++i) {
         if (intersects(node.entries[i].mbr, query)) {
             queryRecursive(in, node.entries[i].child_idx, query, out);
@@ -47,6 +46,7 @@ std::vector<Point> queryRange(const std::string& tree_path, const MBR& query) {
     if (!in) {
         throw std::runtime_error("No se pudo abrir el arbol: " + tree_path);
     }
+
     return queryRange(in, query);
 }
 

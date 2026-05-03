@@ -35,13 +35,13 @@ struct Method {
     std::vector<Node> (*build)(const std::vector<Point>&);
 };
 
+// Metodos de bulk-loading disponibles
 const Method METHODS[] = {
     {"nearest-x", buildNearestX},
     {"str",       buildSTR},
 };
 
-// Referencia a un dataset, usada para iterar sobre los conjuntos
-// "random" y "europa" sin copiar los vectores grandes.
+// Referencia a un dataset, usada para iterar sobre los conjuntos "random" y "europa" sin copiar los vectores grandes.
 //  name: nombre del dataset.
 //  points: puntero al vector de puntos
 struct DatasetRef {
@@ -77,11 +77,14 @@ std::vector<MBR> generateQueries(double s, std::size_t count, std::mt19937& rng)
 //  ret: el par (media, desviacion estandar).
 std::pair<double, double> meanStd(const std::vector<double>& v) {
     if (v.empty()) return {0.0, 0.0};
+    
     double sum = 0;
     for (double x : v) sum += x;
+    
     const double mean = sum / static_cast<double>(v.size());
     double sq = 0;
     for (double x : v) sq += (x - mean) * (x - mean);
+    
     const double stdv = std::sqrt(sq / static_cast<double>(v.size()));
     return {mean, stdv};
 }
@@ -98,9 +101,7 @@ std::pair<double, double> meanStd(const std::vector<double>& v) {
 //  europa_path: archivo binario del dataset Europa.
 //  out_dir: directorio donde se escribiran resultados y arboles.
 //  ret: 0 en exito.
-int runExperiment(const std::string& random_path,
-                  const std::string& europa_path,
-                  const std::string& out_dir) {
+int runExperiment(const std::string& random_path, const std::string& europa_path, const std::string& out_dir) {
     namespace fs = std::filesystem;
     fs::create_directories(out_dir);
 
@@ -128,28 +129,21 @@ int runExperiment(const std::string& random_path,
         const long long N = 1LL << exp;
         for (const auto& d : datasets) {
             if (N > static_cast<long long>(d.points->size())) {
-                std::cerr << d.name << ": N=" << N
-                          << " excede el tamano del dataset, se omite\n";
+                std::cerr << d.name << ": N=" << N << " excede el tamano del dataset, se omite\n";
                 continue;
             }
+
             for (const auto& m : METHODS) {
-                std::vector<Point> sub(d.points->begin(),
-                                       d.points->begin() + N);
+                std::vector<Point> sub(d.points->begin(), d.points->begin() + N);
                 const auto t0 = Clock::now();
                 auto tree = m.build(sub);
                 const auto t1 = Clock::now();
                 const double ms = elapsedMs(t0, t1);
-                build_csv << d.name << "," << m.name << ","
-                          << N << "," << ms << "\n";
-                std::cerr << d.name << "/" << m.name
-                          << " N=" << N
-                          << " -> " << ms << " ms ("
-                          << tree.size() << " nodos)\n";
+                build_csv << d.name << "," << m.name << "," << N << "," << ms << "\n";
+                std::cerr << d.name << "/" << m.name << " N=" << N << " -> " << ms << " ms (" << tree.size() << " nodos)\n";
                 if (exp == 24) {
-                    const std::string label =
-                        std::string(d.name) + "_" + m.name;
-                    const std::string tree_path =
-                        out_dir + "/tree_" + label + ".bin";
+                    const std::string label = std::string(d.name) + "_" + m.name;
+                    const std::string tree_path = out_dir + "/tree_" + label + ".bin";
                     writeTreeBin(tree_path, tree);
                     finals.push_back({label, tree_path});
                 }
@@ -171,6 +165,7 @@ int runExperiment(const std::string& random_path,
             std::cerr << "No se pudo abrir " << f.path << " para consultas\n";
             continue;
         }
+
         for (double s : S_VALUES) {
             const auto queries = generateQueries(s, 100, rng);
             std::vector<double> reads_v;
@@ -183,14 +178,11 @@ int runExperiment(const std::string& random_path,
                 reads_v.push_back(static_cast<double>(g_disk_reads));
                 points_v.push_back(static_cast<double>(pts.size()));
             }
+
             const auto [r_mean, r_std] = meanStd(reads_v);
             const auto [p_mean, p_std] = meanStd(points_v);
-            query_csv << f.label << "," << s << ","
-                      << r_mean << "," << r_std << ","
-                      << p_mean << "," << p_std << "\n";
-            std::cerr << f.label << " s=" << s
-                      << " reads=" << r_mean << "+-" << r_std
-                      << " points=" << p_mean << "+-" << p_std << "\n";
+            query_csv << f.label << "," << s << "," << r_mean << "," << r_std << "," << p_mean << "," << p_std << "\n";
+            std::cerr << f.label << " s=" << s << " reads=" << r_mean << "+-" << r_std << " points=" << p_mean << "+-" << p_std << "\n";
         }
     }
     query_csv.close();
@@ -207,9 +199,7 @@ int runExperiment(const std::string& random_path,
 //  query: rectangulo de consulta en coordenadas reales.
 //  out_path: ruta del archivo CSV de salida.
 //  ret: 0 en exito.
-int runBonus(const std::string& path,
-             const MBR& query,
-             const std::string& out_path) {
+int runBonus(const std::string& path, const MBR& query, const std::string& out_path) {
     std::cerr << "Leyendo dataset bonus desde " << path << "\n";
     const auto points = readPointsBin(path, 0);
     std::cerr << "  -> " << points.size() << " puntos\n";
@@ -218,8 +208,7 @@ int runBonus(const std::string& path,
     const auto t0 = Clock::now();
     auto tree = buildSTR(points);
     const auto t1 = Clock::now();
-    std::cerr << "  -> " << elapsedMs(t0, t1)
-              << " ms (" << tree.size() << " nodos)\n";
+    std::cerr << "  -> " << elapsedMs(t0, t1) << " ms (" << tree.size() << " nodos)\n";
 
     const std::string tree_path = out_path + ".tree";
     writeTreeBin(tree_path, tree);
@@ -232,8 +221,7 @@ int runBonus(const std::string& path,
     for (const auto& p : results) {
         csv << p.x << "," << p.y << "\n";
     }
-    std::cerr << "Encontrados " << results.size()
-              << " puntos con " << g_disk_reads
-              << " lecturas. CSV: " << out_path << "\n";
+
+    std::cerr << "Encontrados " << results.size() << " puntos con " << g_disk_reads << " lecturas. CSV: " << out_path << "\n";
     return 0;
 }

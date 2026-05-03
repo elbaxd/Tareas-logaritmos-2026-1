@@ -33,6 +33,7 @@ std::vector<Entry> pointsToEntries(const std::vector<Point>& points) {
     for (const auto& p : points) {
         entries.push_back(Entry{pointMBR(p), -1});
     }
+
     return entries;
 }
 
@@ -47,6 +48,7 @@ MBR packGroup(const std::vector<Entry>& src, std::size_t start, std::size_t coun
     for (std::size_t i = 0; i < count; ++i) {
         dst.entries[i] = src[start + i];
     }
+
     return computeRangeMBR(dst.entries, count);
 }
 
@@ -75,7 +77,6 @@ void nearestXRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
 
     std::vector<Entry> parents;
     parents.reserve((entries.size() + B - 1) / B);
-
     for (std::size_t i = 0; i < entries.size(); i += B) {
         const std::size_t count = std::min(static_cast<std::size_t>(B), entries.size() - i);
         Node node{};
@@ -84,6 +85,7 @@ void nearestXRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
         tree.push_back(node);
         parents.push_back(Entry{mbr, idx});
     }
+
     nearestXRecursive(tree, parents);
 }
 
@@ -95,10 +97,10 @@ void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
         writeRoot(tree, entries);
         return;
     }
+
     const std::size_t n = entries.size();
     const std::size_t total_groups = (n + B - 1) / B;
-    std::size_t S = static_cast<std::size_t>(
-        std::ceil(std::sqrt(static_cast<double>(total_groups))));
+    std::size_t S = static_cast<std::size_t>(std::ceil(std::sqrt(static_cast<double>(total_groups))));
     if (S < 1) S = 1;
 
     std::sort(entries.begin(), entries.end(), cmpCenterX);
@@ -106,21 +108,22 @@ void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
 
     std::vector<Entry> parents;
     parents.reserve(total_groups + S);
-
     for (std::size_t s = 0; s < S; ++s) {
         const std::size_t slice_start = s * slice_size;
         if (slice_start >= n) break;
+
         const std::size_t slice_end = std::min(slice_start + slice_size, n);
 
-        // Ordenar el slice por Y.
-        std::sort(entries.begin() + static_cast<std::ptrdiff_t>(slice_start),
-                  entries.begin() + static_cast<std::ptrdiff_t>(slice_end),
-                  cmpCenterY);
+        // Ordenar el slice por Y
+        std::sort(
+            entries.begin() + static_cast<std::ptrdiff_t>(slice_start),
+            entries.begin() + static_cast<std::ptrdiff_t>(slice_end),
+            cmpCenterY
+        );
 
-        // Partir el slice en grupos de tamanio B.
+        // Partir el slice en grupos de tamanio B
         for (std::size_t i = slice_start; i < slice_end; i += B) {
-            const std::size_t count = std::min(static_cast<std::size_t>(B),
-                                               slice_end - i);
+            const std::size_t count = std::min(static_cast<std::size_t>(B), slice_end - i);
             Node node{};
             const MBR mbr = packGroup(entries, i, count, node);
             const auto idx = static_cast<std::int32_t>(tree.size());
@@ -128,6 +131,7 @@ void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
             parents.push_back(Entry{mbr, idx});
         }
     }
+
     strRecursive(tree, parents);
 }
 
@@ -148,6 +152,7 @@ std::vector<Node> buildNearestX(const std::vector<Point>& points) {
     if (points.empty()) {
         throw std::invalid_argument("buildNearestX: lista de puntos vacia");
     }
+
     std::vector<Node> tree;
     tree.reserve(estimateTreeSize(points.size()));
 
@@ -155,6 +160,7 @@ std::vector<Node> buildNearestX(const std::vector<Point>& points) {
     tree.push_back(Node{});
     auto entries = pointsToEntries(points);
     nearestXRecursive(tree, entries);
+    
     return tree;
 }
 
@@ -163,6 +169,7 @@ std::vector<Node> buildSTR(const std::vector<Point>& points) {
     if (points.empty()) {
         throw std::invalid_argument("buildSTR: lista de puntos vacia");
     }
+
     std::vector<Node> tree;
     tree.reserve(estimateTreeSize(points.size()));
 
@@ -170,5 +177,6 @@ std::vector<Node> buildSTR(const std::vector<Point>& points) {
     tree.push_back(Node{});
     auto entries = pointsToEntries(points);
     strRecursive(tree, entries);
+    
     return tree;
 }

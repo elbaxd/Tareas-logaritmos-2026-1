@@ -18,15 +18,16 @@ std::vector<Point> readPointsBin(const std::string& path, long long N) {
     if (!in) {
         throw std::runtime_error("No se pudo abrir el archivo de puntos: " + path);
     }
+
     const std::uintmax_t total_bytes = std::filesystem::file_size(path);
     const long long total_points = static_cast<long long>(total_bytes / sizeof(Point));
     const long long to_read = (N <= 0 || N > total_points) ? total_points : N;
     std::vector<Point> points(static_cast<std::size_t>(to_read));
-    in.read(reinterpret_cast<char*>(points.data()),
-            static_cast<std::streamsize>(to_read) * sizeof(Point));
+    in.read(reinterpret_cast<char*>(points.data()), static_cast<std::streamsize>(to_read) * sizeof(Point));
     if (!in) {
         throw std::runtime_error("Error leyendo puntos desde: " + path);
     }
+
     return points;
 }
 
@@ -36,8 +37,8 @@ void writeTreeBin(const std::string& path, const std::vector<Node>& tree) {
     if (!out) {
         throw std::runtime_error("No se pudo abrir el archivo de salida: " + path);
     }
-    out.write(reinterpret_cast<const char*>(tree.data()),
-              static_cast<std::streamsize>(tree.size()) * sizeof(Node));
+
+    out.write(reinterpret_cast<const char*>(tree.data()), static_cast<std::streamsize>(tree.size()) * sizeof(Node));
     if (!out) {
         throw std::runtime_error("Error escribiendo el arbol a: " + path);
     }
