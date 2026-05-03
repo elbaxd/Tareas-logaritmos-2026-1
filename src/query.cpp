@@ -7,9 +7,13 @@
 
 namespace {
 
-// Recorrido recursivo del arbol leyendo cada nodo desde disco
-// No usa el vector en RAM utilizado durante la construccion, sino que lee el  archivo binario 
-// serializado, por lo que cada acceso cuenta para g_disk_reads.
+// Recorrido recursivo del arbol leyendo cada nodo desde disco.
+// Cada lectura de nodo incrementa g_disk_reads.
+// 
+//  in:    stream binario abierto sobre el arbol serializado
+//  idx:   indice del nodo a procesar
+//  query: rectangulo de busqueda
+//  out:   vector donde se acumulan los puntos encontrados
 void queryRecursive(std::ifstream& in,
                     std::int32_t idx,
                     const MBR& query,
@@ -37,6 +41,7 @@ void queryRecursive(std::ifstream& in,
 
 } // namespace
 
+// Documentado en query.hpp
 std::vector<Point> queryRange(const std::string& tree_path, const MBR& query) {
     std::ifstream in(tree_path, std::ios::binary);
     if (!in) {
@@ -45,6 +50,7 @@ std::vector<Point> queryRange(const std::string& tree_path, const MBR& query) {
     return queryRange(in, query);
 }
 
+// Documentado en query.hpp
 std::vector<Point> queryRange(std::ifstream& in, const MBR& query) {
     std::vector<Point> result;
     queryRecursive(in, 0, query, result);

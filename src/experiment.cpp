@@ -117,7 +117,7 @@ int runExperiment(const std::string& random_path,
         {"europa", &europa_points}
     };
 
-    // ------ Tiempos de construccion ------
+    // Tiempos de construccion
     std::ofstream build_csv(out_dir + "/build_times.csv");
     build_csv << "dataset,method,N,time_ms\n";
 
@@ -158,7 +158,7 @@ int runExperiment(const std::string& random_path,
     }
     build_csv.close();
 
-    // ------ Consultas en arboles N=2^24 (leyendo siempre desde disco) ------
+    // Consultas en arboles N=2^24
     std::ofstream query_csv(out_dir + "/query_stats.csv");
     query_csv << "tree,s,reads_avg,reads_std,points_avg,points_std\n";
 

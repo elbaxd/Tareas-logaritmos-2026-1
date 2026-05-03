@@ -9,12 +9,10 @@
 #include <string>
 #include <vector>
 
-// Contador global de lecturas a disco. Cada llamada a readNode() lo incrementa.
-// Es global (no por instancia) para mantener la API simple, segun lo sugerido
-// en el enunciado.
+// Contador global de lecturas a disco. Cada llamada a readNode() lo incrementa
 extern std::size_t g_disk_reads;
 
-// Pone el contador en 0. Llamar antes de medir una consulta.
+// Pone el contador en 0, usado antes de medir una consulta.
 void resetReadCounter();
 
 // Lee N puntos desde un archivo binario de pares (float x, float y).

@@ -7,10 +7,12 @@
 
 std::size_t g_disk_reads = 0;
 
+// Documentado en io.hpp
 void resetReadCounter() {
     g_disk_reads = 0;
 }
 
+// Documentado en io.hpp
 std::vector<Point> readPointsBin(const std::string& path, long long N) {
     std::ifstream in(path, std::ios::binary);
     if (!in) {
@@ -28,6 +30,7 @@ std::vector<Point> readPointsBin(const std::string& path, long long N) {
     return points;
 }
 
+// Documentado en io.hpp
 void writeTreeBin(const std::string& path, const std::vector<Node>& tree) {
     std::ofstream out(path, std::ios::binary | std::ios::trunc);
     if (!out) {
@@ -40,6 +43,7 @@ void writeTreeBin(const std::string& path, const std::vector<Node>& tree) {
     }
 }
 
+// Documentado en io.hpp
 void readNode(std::ifstream& in, std::int32_t idx, Node& out) {
     in.seekg(static_cast<std::streamoff>(idx) * NODE_SIZE);
     in.read(reinterpret_cast<char*>(&out), NODE_SIZE);

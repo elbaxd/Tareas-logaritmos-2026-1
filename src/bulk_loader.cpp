@@ -9,20 +9,24 @@
 
 namespace {
 
-// Comparador por suma de extremos en X. Equivalente monotonico al centro
-// (x1 + x2) / 2 pero sin division: ordena identicamente y evita errores
-// numericos triviales.
+// Funcion de comparacion para dos pares llave-valor, ordena crecientemente por el centro en X
+//  a, b: entradas a comparar.
+//  ret: true si el centro X de a es menor que el de b.
 bool cmpCenterX(const Entry& a, const Entry& b) {
     return (a.mbr.x1 + a.mbr.x2) < (b.mbr.x1 + b.mbr.x2);
 }
 
-// Comparador por suma de extremos en Y.
+// Funcion de comparacion para dos pares llave-valor, ordena crecientemente por el centro en Y
+//  a, b: entradas a comparar.
+//  ret: true si el centro Y de a es menor que el de b.
 bool cmpCenterY(const Entry& a, const Entry& b) {
     return (a.mbr.y1 + a.mbr.y2) < (b.mbr.y1 + b.mbr.y2);
 }
 
-// Convierte una lista de puntos en sus correspondientes entradas hoja.
+// Convierte una lista de puntos en sus correspondientes entradas hoja
 // Cada entrada queda con MBR puntual (x1==x2, y1==y2) y child_idx == -1.
+//  points: puntos de entrada.
+//  ret: vector de entradas hoja (un Entry por punto)
 std::vector<Entry> pointsToEntries(const std::vector<Point>& points) {
     std::vector<Entry> entries;
     entries.reserve(points.size());
@@ -48,6 +52,8 @@ MBR packGroup(const std::vector<Entry>& src, std::size_t start, std::size_t coun
 
 // Escribe la raiz en la posicion 0 del arbol con todas las entradas dadas.
 // Asume que entries.size() <= B (caso base de la recursion).
+//  tree: vector de nodos del arbol, tree[0] se sobreescribe con la raiz.
+//  entries: entradas que formaran la raiz.
 void writeRoot(std::vector<Node>& tree, const std::vector<Entry>& entries) {
     Node& root = tree[0];
     root.k = static_cast<std::int32_t>(entries.size());
@@ -56,9 +62,10 @@ void writeRoot(std::vector<Node>& tree, const std::vector<Entry>& entries) {
     }
 }
 
-// Recursion Nearest-X: ordena por X, agrupa de a B, empuja los nodos hijos al
-// arbol y recurre con las entradas padre. Cuando todo cabe en un nodo, la
-// raiz se escribe en la posicion 0.
+// Recursion Nearest-X: ordena por X, agrupa de a B, empuja los nodos hijos al arbol y recurre con las entradas padre. 
+// Cuando todo cabe en un nodo, la raiz se escribe en la posicion 0
+//  tree: vector de nodos (se agregan hijos durante la recursion).
+//  entries: entradas del nivel actual (se reordenan in-place).
 void nearestXRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
     if (entries.size() <= static_cast<std::size_t>(B)) {
         writeRoot(tree, entries);
@@ -80,9 +87,9 @@ void nearestXRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
     nearestXRecursive(tree, parents);
 }
 
-// Recursion STR: en cada nivel hace slicing 2D antes de empacar. Ordena por
-// X, parte en S = ceil(sqrt(n/B)) slices verticales, ordena cada slice por Y
-// y lo parte en grupos de tamanio B. Total de grupos ~= n/B.
+// Recursion STR: ordena por X, divide en S bloques verticales, ordena cada bloque por Y, y vuelve a dividir en grupos de B. 
+//  tree: vector de nodos (se agregan hijos durante la recursion).
+//  entries: entradas del nivel actual (se reordenan in-place).
 void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
     if (entries.size() <= static_cast<std::size_t>(B)) {
         writeRoot(tree, entries);
@@ -124,37 +131,43 @@ void strRecursive(std::vector<Node>& tree, std::vector<Entry>& entries) {
     strRecursive(tree, parents);
 }
 
-// Estimacion (con holgura) del numero de nodos del arbol para reservar
-// capacidad de antemano y evitar reallocs caras.
-//   n: cantidad inicial de entradas hoja.
-//   ret: cota superior aproximada del numero de nodos del arbol.
+// Estimacion (con holgura) del numero de nodos del arbol para reservar capacidad de antemano y evitar reallocs
+//  n: cantidad inicial de entradas hoja.
+//  ret: cota superior aproximada del numero de nodos del arbol.
 std::size_t estimateTreeSize(std::size_t n) {
     if (n <= static_cast<std::size_t>(B)) return 1;
-    // Suma de la serie geometrica 1 + 1/B + 1/B^2 + ... acotada por n/(B-1).
+
+    // Como cada nivel divide por B, el total de nodos es n/(B-1)
     return n / (static_cast<std::size_t>(B) - 1) + static_cast<std::size_t>(B);
 }
 
 } // namespace
 
+// Documentado en bulk_loader.hpp
 std::vector<Node> buildNearestX(const std::vector<Point>& points) {
     if (points.empty()) {
         throw std::invalid_argument("buildNearestX: lista de puntos vacia");
     }
     std::vector<Node> tree;
     tree.reserve(estimateTreeSize(points.size()));
-    tree.push_back(Node{}); // posicion 0 reservada para la raiz
+
+    // posicion 0 reservada para la raiz
+    tree.push_back(Node{});
     auto entries = pointsToEntries(points);
     nearestXRecursive(tree, entries);
     return tree;
 }
 
+// Documentado en bulk_loader.hpp
 std::vector<Node> buildSTR(const std::vector<Point>& points) {
     if (points.empty()) {
         throw std::invalid_argument("buildSTR: lista de puntos vacia");
     }
     std::vector<Node> tree;
     tree.reserve(estimateTreeSize(points.size()));
-    tree.push_back(Node{}); // posicion 0 reservada para la raiz
+
+    // posicion 0 reservada para la raiz
+    tree.push_back(Node{});
     auto entries = pointsToEntries(points);
     strRecursive(tree, entries);
     return tree;
