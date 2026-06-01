@@ -1,4 +1,7 @@
 # Instrucción
+Tu misión es implementar en lenguaje C++ dos estructuras de árboles de búsqueda binaria autobalanceables: el Árbol AVL y el Splay Tree. Ambas estructuras deberán soportar de forma eficiente las operaciones fundamentales de inserción y búsqueda, utilizando las rotaciones primitivas correspondientes para mantener el equilibrio del árbol o reorganizar sus nodos según los accesos.
+
+Para comparar el rendimiento de ambas estructuras, se diseñarán experimentos que evalúen su comportamiento frente a claves con distribución uniforme y distribuciones sesgadas (exponenciales) bajo cuatro escenarios base que combinan inserciones aleatorias u ordenadas con búsquedas uniformes o sesgadas. Adicionalmente, comprobarás experimentalmente la naturaleza amortizada y las propiedades teóricas de los Splay Trees mediante la validación del Sequential Access Theorem, el Working Set Theorem y la Traversal Conjecture utilizando datasets a gran escala.
 
 ## Contexto
 El _árbol AVL_ fue presentado en 1962 como el primer _árbol de búsqueda binaria autobalanceable_, es decir, que está constantemente equilibrado. Esto lo consigue mediante una variable adicional denominada _Balance Factor_ (en español, _Factor de Equilibrio_) la cual almacena toda la información necesaria para saber si los hijos de cada nodo están o no balanceados. Lo anterior permite conseguir un costo de `O(log(n))` para búsqueda, inserción y eliminación tanto promedio como peor caso al mantener una altura máxima de aproximadamente `3/2 * log_2(n)` para cada nodo.
