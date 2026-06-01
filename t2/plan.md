@@ -317,9 +317,14 @@ void runTraversal(const std::string& outDir, uint64_t seed);
 ```cpp
 #include <chrono>
 using Clock = std::chrono::steady_clock;
+using HiResClock = std::chrono::high_resolution_clock;
 
 double elapsedMs(Clock::time_point start, Clock::time_point end) {
     return std::chrono::duration<double, std::milli>(end - start).count();
+}
+
+double elapsedNs(HiResClock::time_point start, HiResClock::time_point end) {
+    return std::chrono::duration<double, std::nano>(end - start).count();
 }
 ```
 
@@ -354,28 +359,35 @@ for N in BASE_N:
 
         // --- Búsquedas ---
         M = 10 * C * N
-        if (config == A o C):  // uniform search
-            keys = generateUniform(N, seed+1)  // fresh search keys
-            // Repetir ciclicamente el vector de keys hasta M
-        else:  // skewed search (B o D)
-            // Usar cmf con discrete_distribution para samplear M keys
+        // search_keys se construye según la sección "Detalle de generación de search_keys"
+        // (ver más abajo: N keys muestreadas del dataset con la distribución correspondiente)
 
-        // Buscar en AVL
+        // Buscar en AVL (tiempo total + tiempos individuales)
         t0 = Clock::now()
-        for i in 0..M-1: avl.search(search_keys[i % search_keys.size()])
+        for i in 0..M-1:
+            t_before = Clock::now()
+            avl.search(search_keys[i % search_keys.size()])
+            t_after = Clock::now()
+            avl_per_step_ns = elapsedNs(t_before, t_after)
+            // Escribir fila en base_per_search.csv: config,N,i,avl_per_step_ns,
         t1 = Clock::now()
         avl_search_ms = elapsedMs(t0, t1)
 
-        // Buscar en Splay
+        // Buscar en Splay (tiempo total + tiempos individuales)
         t0 = Clock::now()
-        for i in 0..M-1: splay.search(search_keys[i % search_keys.size()])
+        for i in 0..M-1:
+            t_before = Clock::now()
+            splay.search(search_keys[i % search_keys.size()])
+            t_after = Clock::now()
+            splay_per_step_ns = elapsedNs(t_before, t_after)
+            // Completar la misma fila en base_per_search.csv: ,splay_per_step_ns
         t1 = Clock::now()
         splay_search_ms = elapsedMs(t0, t1)
 
         avl.clear()
         splay.clear()
 
-        // Escribir fila CSV
+        // Escribir fila CSV (totales agregados)
         append to base_results.csv: config,N,avl_insert_ms,avl_search_ms,
                                      splay_insert_ms,splay_search_ms
 ```
@@ -384,7 +396,10 @@ for N in BASE_N:
 
 ```
 Para búsqueda uniforme (A, C):
-    search_keys = generateUniform(N, seed + config_offset)  // N keys aleatorias
+    // Muestrear N claves del dataset con probabilidad uniforme
+    uniform_int_distribution<size_t> pickIdx(0, N-1)
+    search_keys = vector<uint32_t>(N)
+    for i in 0..N-1: search_keys[i] = dataset[pickIdx(rng)]
 Para búsqueda sesgada (B, D):
     pmf = exponentialPMF(N, LAMBDA)
     discrete_distribution dist(pmf.begin(), pmf.end())
@@ -402,14 +417,25 @@ A,1024,0.234,1.567,0.345,0.890
 ...
 ```
 
+**CSV adicional**: `base_per_search.csv` (tiempos individuales por búsqueda, en nanosegundos)
+
+```csv
+config,N,step,avl_time_ns,splay_time_ns
+A,1024,0,1230,980
+A,1024,1,1190,850
+...
+```
+
+**Nota**: Dado que M = 10*c*N, para N=16384 y c=10 este archivo puede tener ~1.6M filas por configuración. Usar `std::chrono::high_resolution_clock` y medir en nanosegundos (`elapsedNs`).
+
 #### Sequential Access Theorem
 
 ```
 N = 2^25 = 33554432
 dataset = generateUniform(N)
-sort(dataset)
+sorted_dataset = sort(copy(dataset))
 
-// Construir árboles
+// Construir árboles en el mismo orden aleatorio (sin ordenar)
 avl = AVL(); splay = SplayTree()
 for key in dataset:
     avl.insert(key)
@@ -419,8 +445,8 @@ for key in dataset:
 m_values = [N/100, 2N/100, ..., 10N/100]
 
 for m in m_values:
-    // Tomar los primeros m elementos del dataset ordenado (son crecientes)
-    seq = dataset[0..m-1]
+    // Tomar los primeros m elementos de sorted_dataset (estrictamente crecientes)
+    seq = sorted_dataset[0..m-1]
 
     // AVL
     t0 = Clock::now()
@@ -451,9 +477,8 @@ m,avl_search_ms,splay_search_ms
 ```
 N = 2^25
 dataset = generateUniform(N)
-sort(dataset)
 
-// Construir árboles (igual que sequential access)
+// Construir árboles en el mismo orden aleatorio (sin ordenar)
 avl = AVL(); splay = SplayTree()
 for key in dataset: avl.insert(key); splay.insert(key)
 
@@ -661,17 +686,27 @@ pandas>=1.3
 
 **`plots/plot_base.py`**:
 ```
-Entrada: ../results/base_results.csv
+Entrada: ../results/base_results.csv + ../results/base_per_search.csv
 Salida:  ../results/base_scenarios.png (4 subplots, uno por config A/B/C/D)
+         ../results/base_per_search.png (tiempos individuales)
 
+Parte 1 — Gráfico agregado (base_scenarios.png):
 Para cada configuración, gráfico de línea:
 - Eje X: N (1024 a 16384)
-- Eje Y: tiempo de búsqueda (ms)
+- Eje Y: tiempo total de búsqueda (ms)
 - Dos líneas: AVL y Splay
 - Escala: log-log (N vs tiempo)
-- Leyenda, etiquetas, título
 
-Opcional: incluir las cotas teóricas O(log N) multiplicadas por constante.
+Parte 2 — Gráfico de tiempos individuales (base_per_search.png):
+Para exponer visualmente la naturaleza amortizada del Splay Tree:
+- Subgráficos por configuración + N (o usar el N más grande, 16384, como representativo)
+- Eje X: step (índice de búsqueda, 0..M-1)
+- Eje Y: tiempo de búsqueda (ns o µs)
+- Dos líneas superpuestas: AVL y Splay
+- Opcional: media móvil (ventana deslizante de ~1000 búsquedas) para suavizar
+  y hacer visibles los picos del Splay Tree frente a la línea plana del AVL
+
+Leyenda, etiquetas, título en todos los gráficos.
 ```
 
 **`plots/plot_seq.py`**:
