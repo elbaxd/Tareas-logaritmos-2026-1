@@ -1,265 +1,265 @@
 # Instrucción
 
 ## Contexto
-El árbol AVL fue presentado en 1962 como el primer árbol de búsqueda binaria autobalanceable, es decir, que está constantemente equilibrado. Esto lo consigue mediante una variable adicional denominada Balance Factor (en español, Factor de Equilibrio) la cual almacena toda la información necesaria para saber si los hijos de cada nodo están o no balanceados. Lo anterior permite conseguir un costo de O(log n) para búsqueda, inserción y eliminación tanto promedio como peor caso al mantener una altura máxima de aproximadamente 3/2 log_2(n) para cada nodo.
+El _árbol AVL_ fue presentado en 1962 como el primer _árbol de búsqueda binaria autobalanceable_, es decir, que está constantemente equilibrado. Esto lo consigue mediante una variable adicional denominada _Balance Factor_ (en español, _Factor de Equilibrio_) la cual almacena toda la información necesaria para saber si los hijos de cada nodo están o no balanceados. Lo anterior permite conseguir un costo de `O(log n)` para búsqueda, inserción y eliminación tanto promedio como peor caso al mantener una altura máxima de aproximadamente `3/2 * log_2(n)` para cada nodo.
 
-El Splay Tree es otra estructura de árbol de búsqueda binaria autobalanceable, la cual, sin la necesidad de almacenar información adicional para mantener el equilibrio, alcanza un costo amortizado de O(log n) para las mismas tres operaciones. Es más, para una secuencia de accesos a nodos con distintas probabilidades tiene un costo amortizado de O(K), donde K es la entropía de esas probabilidades (visto en detalle más adelante).
+El _Splay Tree_ es otra estructura de _árbol de búsqueda binaria autobalanceable_, la cual, sin la necesidad de almacenar información adicional para mantener el equilibrio, alcanza un costo amortizado de `O(log(n))` para las mismas tres operaciones. Es más, para una secuencia de accesos a nodos con distintas probabilidades tiene un costo amortizado de `O(K)`, donde `K` es la _entropía_ de esas probabilidades (visto en detalle más adelante).
 
-El objetivo de esta misión es comparar ambas estructuras en distintos escenarios de inserción y búsqueda, además de comprobar experimentalmente el desempeño mediante ciertos teoremas probados para los Splay Trees.
+El objetivo de esta misión es comparar ambas estructuras en distintos escenarios de inserción y búsqueda, además de comprobar experimentalmente el desempeño mediante ciertos teoremas probados para los _Splay Trees_.
 
 ## Conceptos Preliminares
 
 ### Notación
-Durante esta misión se ocupará la notación X=x(A, B) para denotar que X es un árbol con el elemento x en la raíz, subárbol izquierdo A y subárbol derecho B. Además, se usará el símbolo A → B para denotar una rotación de un árbol A a un árbol B.
+Durante esta misión se ocupará la notación `X=x(A, B)` para denotar que `X` es un árbol con el elemento `x` en la raíz, subárbol izquierdo `A` y subárbol derecho `B`. Además, se usará el símbolo `A → B` para denotar una rotación de un árbol `A` a un árbol `B`.
 
-Por ejemplo: y(x(A, B), C) → x(A, y(B, C))
-Representa una rotación simple hacia la derecha, donde x es el hijo izquierdo de y, y luego y pasa a ser el hijo derecho de x.
+Por ejemplo: `y(x(A, B), C) → x(A, y(B, C))`
+Representa una _rotación simple hacia la derecha_, donde `x` es el hijo izquierdo de `y`, y luego `y` pasa a ser el hijo derecho de `x`.
 
 ### Operaciones Básicas
 Para la implementación de las estructuras, se definen una serie de rotaciones primitivas, con las cuales se pueden realizar operaciones más complejas tales como splay:
 
 #### Rotaciones Simples:
-- Zig: y(x(A, B), C) → x(A, y(B, C))
-- Zag: y(A, x(B, C)) → x(y(A, B), C)
+- `Zig`: `y(x(A, B), C) → x(A, y(B, C))`
+- `Zag`: `y(A, x(B, C)) → x(y(A, B), C)`
 
-Notar que Zig corresponde a la rotación simple a la derecha del ejemplo que se vio en el punto anterior.
+Notar que `Zig` corresponde a la _rotación simple a la derecha_ del ejemplo que se vio en el punto anterior.
 
 #### Rotaciones Dobles
-- Zig-Zig: z(y(x(A, B), C), D) → x(A, y(B, z(C, D)))
-- Zig-Zag: z(y(A, x(B, C)), D) → x(y(A, B), z(C, D))
-- Zag-Zig: z(A, y(x(B, C), D)) → x(z(A, B), y(C, D))
-- Zag-Zag: z(A, y(B, x(C, D))) → x(y(z(A, B), C), D)
+- `Zig-Zig`: `z(y(x(A, B), C), D) → x(A, y(B, z(C, D)))`
+- `Zig-Zag`: `z(y(A, x(B, C)), D) → x(y(A, B), z(C, D))`
+- `Zag-Zig`: `z(A, y(x(B, C), D)) → x(z(A, B), y(C, D))`
+- `Zag-Zag`: `z(A, y(B, x(C, D))) → x(y(z(A, B), C), D)`
 
 ## Árboles AVL
-El Balance Factor de un nodo se define como la diferencia entre las alturas del subárbol izquierdo y derecho, es decir:
+El _Balance Factor_ de un nodo se define como la diferencia entre las alturas del subárbol izquierdo y derecho, es decir:
 
-BF(x(A, B)) = height(A) - height(B)
+`BF(x(A, B)) = height(A) - height(B)`
 
-Un árbol AVL es árbol de búsqueda binaria donde el factor de equilibrio de cada uno de sus nodos no es mayor a 1 ni menor a -1, es decir, que su subárbol izquierdo tiene a lo más un nivel más de profundidad que su subárbol derecho (o al revés). De esta forma, se asegura que la altura de cada nodo es menor a 3/2 log_2(n) como se vio anteriormente. Dicho de otra forma, un árbol AVL es un ABB que mantiene el invariante:
+Un _árbol AVL_ es un _árbol de búsqueda binaria_ donde el _factor de equilibrio_ de cada uno de sus nodos no es mayor a 1 ni menor a -1, es decir, que su subárbol izquierdo tiene a lo más un nivel más de profundidad que su subárbol derecho (o al revés). De esta forma, se asegura que la altura de cada nodo es menor a `3/2 * log_2(n)` como se vio anteriormente. Dicho de otra forma, un _árbol AVL_ es un _ABB_ que mantiene el _invariante_:
 
-Para todo x_i existe x(A, B) tal que |BF(x)| <= 1
+Para todo `x_i` existe `x(A, B)` tal que `|BF(x)| <= 1`
 
-Se dice que un nodo x está "desbalanceado" si BF(x) > 1
+Se dice que un nodo `x` está _desbalanceado_ si `BF(x) > 1`
 
-Esta propiedad de los AVL se consigue mediante una rotación luego de cada operación que altere la estructura del árbol (como inserciones o borrados) en caso de ser necesaria.
+Esta propiedad de los _AVL_ se consigue mediante una rotación luego de cada operación que altere la estructura del árbol (como inserciones o borrados) en caso de ser necesaria.
 
-Nota Importante: Una sola operación no puede aumentar la altura de un nodo en más de una unidad, por lo que simplemente se asume que un nodo x está desbalanceado si BF(x)=2.
+**Nota Importante**: Una sola operación no puede aumentar la altura de un nodo en más de una unidad, por lo que simplemente se asume que un nodo `x` está desbalanceado si `BF(x)=2`.
 
 
 ### Búsqueda en un AVL
-La búsqueda en un árbol AVL se hace de la misma manera que en un ABB clásico. Considerando el caso cuando se quiere buscar el elemento x en el árbol r(A, B):
+La búsqueda en un _árbol AVL_ se hace de la misma manera que en un _ABB clásico_. Considerando el caso cuando se quiere buscar el elemento `x` en el árbol `r(A, B)`:
 
-- Si r = x, Se termina la búsqueda exitosamente.
-- Si x < r, se busca x en A recursivamente.
-- Si x > r, se busca x en B recursivamente.
+- Si `r = x`, se termina la búsqueda exitosamente.
+- Si `x < r`, se busca `x` en `A` recursivamente.
+- Si `x > r`, se busca `x` en `B` recursivamente.
 
-Si eventualmente se llega a un árbol vacío, significa que el elemento x no existe.
+Si eventualmente se llega a un árbol vacío, significa que el elemento `x` no existe.
 
 ### Inserción en un AVL
-La inserción en un árbol AVL es similar a la inserción en un ABB clásico, con la diferencia que se debe verificar el factor de balance en cada llamada recursiva y realizar una rotación en caso de ser necesaria. En efecto, si se quiere insertar el elemento x en el árbol r(A, B), se describe el proceso de inserción a continuación:
+La inserción en un _árbol AVL_ es similar a la inserción en un _ABB clásico_, con la diferencia que se debe verificar el _factor de balance_ en cada llamada recursiva y realizar una rotación en caso de ser necesaria. En efecto, si se quiere insertar el elemento `x` en el árbol `r(A, B)`, se describe el proceso de inserción a continuación:
 
-1. Primero, insertar x dentro del árbol.
-  - Si r es vacío, insertar x en r.
-  - Si x < r, insertar en A recursivamente.
-  - Si x > r, insertar en B recursivamente.
+1. Primero, insertar `x` dentro del árbol.
+  - Si `r` es vacío, insertar `x` en `r`.
+  - Si `x < r`, insertar en `A` recursivamente.
+  - Si `x > r`, insertar en `B` recursivamente.
 
 2. Luego, para cada nodo en el camino de vuelta a la raíz del árbol, se debe:
   - Actualizar su altura.
-  - Recalcular su factor de equilibrio.
-  - Verificar que se siga cumpliendo el invariante: Si no se cumple, se debe balancear con una rotación.
+  - Recalcular su _factor de equilibrio_.
+  - Verificar que se siga cumpliendo el _invariante_: Si no se cumple, se debe balancear con una rotación.
 
 ### Rotaciones en un AVL
-Como se vio anteriormente, al encontrar un nodo desbalanceado (un nodo z con |BF(z)|=2) en el camino de vuelta, se debe realizar una rotación para restaurar el invariante.
+Como se vio anteriormente, al encontrar un nodo _desbalanceado_ (un nodo `z` con `|BF(z)|=2`) en el camino de vuelta, se debe realizar una rotación para restaurar el _invariante_.
 
 En efecto, considerando lo siguiente:
- - z: nodo desbalanceado
- - y: su hijo de mayor altura
- - x: el nieto que produjo el desbalance
+ - `z`: nodo desbalanceado
+ - `y`: su hijo de mayor altura
+ - `x`: el nieto que produjo el desbalance
 
 Se pueden encontrar 4 casos posibles de desbalance:
 
 #### Left Left (LL)
 El desbalance está en el subárbol izquierdo del hijo izquierdo, es decir:
-z(y(x(A, B), C), D)
-Se identifica si BF(z)=2 y BF(y)>=0
+`z(y(x(A, B), C), D)`
+Se identifica si `BF(z)=2` y `BF(y)>=0`
 
-Solución: Aplicar un Zig sobre z.
+Solución: Aplicar un `Zig` sobre `z`.
 
 #### Right Right (RR)
 El desbalance está en el subárbol derecho del hijo derecho, es decir:
-z(A, y(B, x(C, D)))
-Se identifica si BF(z)=-2 y BF(y)<=0
+`z(A, y(B, x(C, D)))`
+Se identifica si `BF(z)=-2` y `BF(y)<=0`
 
-Solución: Aplicar un Zag sobre z.
+Solución: Aplicar un `Zag` sobre `z`.
 
 #### Left Right (LR)
 El desbalance está en el subárbol derecho del hijo izquierdo, es decir:
-z(y(A, x(B, C)), D)
-Se identifica si BF(z)=2 y BF(y)<0
+`z(y(A, x(B, C)), D)`
+Se identifica si `BF(z)=2` y `BF(y)<0`
 
-Solución: Aplicar un Zig-Zag sobre z.
+Solución: Aplicar un `Zig-Zag` sobre `z`.
 
 #### Right Left (RL)
 El desbalance está en el subárbol izquierdo del hijo derecho, es decir:
-z(A, y(x(B, C), D))
-Se identifica si BF(z)=-2 y BF(y)>0
+`z(A, y(x(B, C), D))`
+Se identifica si `BF(z)=-2` y `BF(y)>0`
 
-Solución: Aplicar una rotación doble Zag-Zig sobre z.
+Solución: Aplicar una rotación doble `Zag-Zig` sobre `z`.
 
 #### Nota
-Como se puede observar, el AVL nunca utiliza las rotaciones Zig-Zig ni Zag-Zag definidas en la sección anterior, a diferencia del Splay Tree.
+Como se puede observar, el _AVL_ nunca utiliza las rotaciones `Zig-Zig` ni `Zag-Zag` definidas en la sección anterior, a diferencia del _Splay Tree_.
 
 ## Splay Trees
-El Splay Tree es un tipo de árbol de búsqueda binaria que tiene un método distinto de realizar las operaciones, el cual garantiza un costo amortizado de O(K), donde K es la entropía de esas probabilidades, la cual es definida como sigue:
+El _Splay Tree_ es un tipo de _árbol de búsqueda binaria_ que tiene un método distinto de realizar las operaciones, el cual garantiza un costo amortizado de `O(K)`, donde `K` es la _entropía_ de esas probabilidades, la cual es definida como sigue:
 
-Dada P: U → [0, 1], se tiene:
-K(P) = Sumatoria de los u pertenecientes a U de: P(u) * log_2(1/P(u))
+Dada `P: U → [0, 1]`, se tiene:
+`K(P) = Sumatoria de los u pertenecientes a U de: P(u) * log_2(1/P(u))`
 
-Lo que se traduce a O(log n) para claves con distribución uniforme, pues:
+Lo que se traduce a `O(log(n))` para claves con _distribución uniforme_, pues:
 
-P(u) = 1/u, para todo u perteneciente a U
+`P(u) = 1/u`, para todo `u` perteneciente a `U`
 
-Esto se consigue gracias a que en esta estructura, todas las operaciones (incluso la lectura) modifican la estructura mediante rotaciones, manteniendo el árbol constantemente balanceado al igual que el AVL, pero además mejorando la eficiencia para distribuciones sesgadas de claves gracias a las modificaciones (y sin la necesidad de almacenar información adicional).
+Esto se consigue gracias a que en esta estructura, todas las operaciones (incluso la lectura) modifican la estructura mediante rotaciones, manteniendo el árbol constantemente balanceado al igual que el _AVL_, pero además mejorando la eficiencia para _distribuciones sesgadas_ de claves gracias a las modificaciones (y sin la necesidad de almacenar información adicional).
 
-La idea principal del Splay Tree es que el nodo más profundo accedido (normalmente el objetivo de la operación) debe quedar en la raíz del árbol. Para ello, una vez accedido un nodo x mediante cualquier operación, éste se lleva a la raíz utilizando una operación llamada splay(x).
+La idea principal del _Splay Tree_ es que el nodo más profundo accedido (normalmente el objetivo de la operación) debe quedar en la raíz del árbol. Para ello, una vez accedido un nodo `x` mediante cualquier operación, éste se lleva a la raíz utilizando una operación llamada `splay(x)`.
 
 ### Splay
-Como se mencionó anteriormente, luego de acceder a un nodo x, se debe llamar a splay(x) para subirlo hasta la raíz. Esta operación consiste de una serie de rotaciones consecutivas (como las descritas en la sección 3.2: Operaciones Básicas), la cual finalizará una vez que x esté en la raíz del árbol.
+Como se mencionó anteriormente, luego de acceder a un nodo `x`, se debe llamar a `splay(x)` para subirlo hasta la raíz. Esta operación consiste de una serie de rotaciones consecutivas (como las descritas en la sección 3.2: Operaciones Básicas), la cual finalizará una vez que `x` esté en la raíz del árbol.
 
-Es importante mencionar que las rotaciones simples (zig y zag) solo se realizarán si el nodo y la raíz del árbol, por lo que la secuencia de rotaciones llamadas por splay consistirá de 0 o más rotaciones dobles consecutivas seguidas de una posible rotación simple.
+Es importante mencionar que las rotaciones simples (`zig` y `zag`) solo se realizarán si el nodo `y` es la raíz del árbol, por lo que la secuencia de rotaciones llamadas por `splay` consistirá de 0 o más rotaciones dobles consecutivas seguidas de una posible rotación simple.
 
 ### Búsqueda en un Splay Tree
-La búsqueda en un Splay Tree se hace de la misma manera que en un ABB clásico, o, lo que es lo mismo, de la misma forma que un AVL (Ver sección 4.1: Búsqueda en un AVL). Luego, se hace splay(x).
+La búsqueda en un _Splay Tree_ se hace de la misma manera que en un _ABB clásico_, o, lo que es lo mismo, de la misma forma que un _AVL_ (Ver sección 4.1: Búsqueda en un _AVL_). Luego, se hace `splay(x)`.
 
-Si x no se encuentra, se hace splay(x'), donde x' es el último nodo visitado, o mejor dicho, el nodo que sería el padre de x en caso de estar este último en el árbol.
+Si `x` no se encuentra, se hace `splay(x')`, donde `x'` es el último nodo visitado, o mejor dicho, el nodo que sería el padre de `x` en caso de estar este último en el árbol.
 
 ### Inserción en un Splay Tree
-La inserción en un Splay Tree se hace de la misma manera que en un ABB clásico. En efecto, la inserción del nodo x en el árbol r(A, B):
+La inserción en un _Splay Tree_ se hace de la misma manera que en un _ABB clásico_. En efecto, la inserción del nodo `x` en el árbol `r(A, B)`:
 
-- Si r = none, se crea un nodo x(none, none) y se inserta en lugar de r.
-- Si x <= r, se inserta en A recursivamente.
-- Si x > r, se inserta en B recursivamente.
+- Si `r = none`, se crea un nodo `x(none, none)` y se inserta en lugar de `r`.
+- Si `x <= r`, se inserta en `A` recursivamente.
+- Si `x > r`, se inserta en `B` recursivamente.
 
-Luego de finalizada la inserción del elemento, se hace splay(x).
+Luego de finalizada la inserción del elemento, se hace `splay(x)`.
 
 ### Sequential Access Theorem
-El Static Finger Theorem establece que dado un elemento fijo f del universo, llamado "dedo" (finger), el costo total de una secuencia de m accesos x_1, x_2, ..., x_m en un Splay Tree con n elementos es:
+El _Static Finger Theorem_ establece que dado un elemento fijo `f` del universo, llamado _dedo_ (_finger_), el costo total de una secuencia de `m` accesos `x_1, x_2, ..., x_m` en un _Splay Tree_ con `n` elementos es:
 
-O(n log(n) + m + Sumatoria de i=1..m de log(|x_i - f|) + 1)
+`O(n log(n) + m + Sumatoria en i=1..m de log(|x_i - f|) + 1)`
 
-Es decir, el costo de acceder a un elemento x_i es proporcional al logaritmo de su distancia al dedo de f: cuanto más cercano a f es el elemento accedido, menor es su costo.
+Es decir, el costo de acceder a un elemento `x_i` es proporcional al logaritmo de su distancia al dedo de `f`: cuanto más cercano a `f` es el elemento accedido, menor es su costo.
 
-Una consecuencia directa de este resultado es el Sequential Access Theorem: si se buscan m claves en orden estrictamente creciente en un Splay Tree con n elementos, entonces el costo total de la secuencia es:
+Una consecuencia directa de este resultado es el _Sequential Access Theorem_: si se buscan `m` claves en orden estrictamente creciente en un _Splay Tree_ con `n` elementos, entonces el costo total de la secuencia es:
 
-O(n + m * log(n/m))
+`O(n + m * log(n/m))`
 
 ### Working Set Theorem
-El Working Set Theorem establece que el costo de acceder al elemento x en el instante t es el O(log(t(x) + 1)), donde t(x) denota el número de elementos distintos accedidos entre la última vez que se accedió a x y el instante actual. A este valor se le denomina el tamaño del working set de x en el instante t.
+El _Working Set Theorem_ establece que el costo de acceder al elemento `x` en el instante `t` es el `O(log(t(x) + 1))`, donde `t(x)` denota el número de elementos distintos accedidos entre la última vez que se accedió a `x` y el instante actual. A este valor se le denomina el tamaño del _working set_ de `x` en el instante `t`.
 
-Intuitivamente, los elementos accedidos recientemente ascienden hacia la raíz y son baratos de volver a acceder. Más formalmente, si una aplicación trabaja repetidamente sobre un subconjunto activo de W elementos (el working set), el costo amortizado por acceso en un Splay Tree de n nodos será O(log W) en lugar de O(log n).
+Intuitivamente, los elementos accedidos recientemente ascienden hacia la raíz y son baratos de volver a acceder. Más formalmente, si una aplicación trabaja repetidamente sobre un subconjunto activo de `W` elementos (el _working set_), el costo amortizado por acceso en un _Splay Tree_ de `n` nodos será `O(log W)` en lugar de `O(log n)`.
 
 ## Implementación
 
 ### Objetivos
 Implementa ambas estructuras de datos junto a sus operaciones fundamentales. Es decir, para cada estructura, debes implementar al menos los siguientes métodos:
 
-- insert(x): Inserta un nuevo elemento con clave x en el árbol.
-- search(x): Busca el elemento x en el árbol. Puede retornar un booleano o un puntero al nodo, pero lo fundamental es que ejecute toda la lógica de recorrido y reestructuración correspondiente.
+- `insert(x)`: Inserta un nuevo elemento con clave `x` en el árbol.
+- `search(x)`: Busca el elemento `x` en el árbol. Puede retornar un booleano o un puntero al nodo, pero lo fundamental es que ejecute toda la lógica de recorrido y reestructuración correspondiente.
 
-Adicionalmente, se exige contar con funciones de rotación que representen las primitivas descritas en la sección 3.2 (Operaciones Básicas), con las cuales se deberán construir las operaciones más complejas como splay(x) y el balanceo del árbol AVL.
+Adicionalmente, se exige contar con funciones de rotación que representen las primitivas descritas en la sección 3.2 (Operaciones Básicas), con las cuales se deberán construir las operaciones más complejas como `splay(x)` y el balanceo del _árbol AVL_.
 
 ## Experimentación
 
 ### Construcción
 
 #### Creación de datasets
-Para cada N perteneciente a {2^10, 2^11, ..., 2^14} debes construir un dataset de números aleatorios uniformemente distribuidos en el rango [0, 4294967295] = [0, 2^32 - 1]. Estos pueden ser guardados en un arreglo, en un archivo de texto plano o en la forma que se estime conveniente.
+Para cada `N` perteneciente a `{2^10, 2^11, ..., 2^14}` debes construir un dataset de números aleatorios uniformemente distribuidos en el rango `[0, 4294967295] = [0, 2^32 - 1]`. Estos pueden ser guardados en un arreglo, en un archivo de texto plano o en la forma que se estime conveniente.
 
 #### Generación de función aleatoria
-Debes definir una función de probabilidad sesgada basada en la distribución exponencial:
+Debes definir una función de probabilidad sesgada basada en la _distribución exponencial_:
 
-P(i) = e^(-lambda * i) * (1 - e^(-lambda))/(1 - e^(-lambda * N))
+`P(i) = e^(-lambda * i) * (1 - e^(-lambda))/(1 - e^(-lambda * N))`
 
-Donde, tendrás que fijar el parámetro lambda para crear tu propia función sesgada: Valores cercanos a 0 generan distribuciones casi uniformes y cercanos a 1 generan distribuciones demasiado sesgadas.
+Donde, tendrás que fijar el parámetro `lambda` para crear tu propia función sesgada: Valores cercanos a `0` generan _distribuciones casi uniformes_ y cercanos a `1` generan _distribuciones demasiado sesgadas_.
 
-Se recomienda usar lambda en [0.001, 0.05] para obtener resultados interesantes.
+Se recomienda usar `lambda` en `[0.001, 0.05]` para obtener resultados interesantes.
 
 ### Escenarios Base
-Para comenzar, debes fijar un c perteneciente a {1, 2, ..., 10} a elección (este valor debe estar   en el código y el reporte).
+Para comenzar, debes fijar un `c` perteneciente a `{1, 2, ..., 10}` a elección (este valor debe estar en el código y el reporte).
 
-Luego, para cada N perteneciente a {2^10, 2^11, ..., 2^14} debes realizar N inserciones en ambas estructuras, seguidas de  M = 10 * c * N búsquedas para 4 configuraciones experimentales definidas más adelante.
+Luego, para cada `N` perteneciente a `{2^10, 2^11, ..., 2^14}` debes realizar `N` inserciones en ambas estructuras, seguidas de `M = 10 * c * N` búsquedas para `4` configuraciones experimentales definidas más adelante.
 
-Los elementos escogidos tanto para la inserción, como para la búsqueda deben ser obtenidos del dataset asociado al N actual.
+Los elementos escogidos tanto para la inserción, como para la búsqueda deben ser obtenidos del dataset asociado al `N` actual.
 
-Además, tendrás que reportar los tiempos totales tanto de inserción como de búsqueda para todos los casos en una tabla y realizar un gráfico de línea para las 4 configuraciones que permita comparar los tiempos de ejecución de ambas estructuras para cada valor de N, el cual muestre el tiempo para cada búsqueda de modo de exponer visualmente la naturaleza amortizada del Splay Tree.
+Además, tendrás que reportar los tiempos totales tanto de inserción como de búsqueda para todos los casos en una tabla y realizar un gráfico de línea para las `4` configuraciones que permita comparar los tiempos de ejecución de ambas estructuras para cada valor de `N`, el cual muestre el tiempo para cada búsqueda de modo de exponer visualmente la naturaleza amortizada del _Splay Tree_.
 
-Las configuraciones son descritas a continuación
+Las configuraciones son descritas a continuación:
 
 #### A: Inserción aleatoria, búsqueda uniforme
-Realiza N inserciones eligiendo elementos aleatorios con probabilidad uniforme. Luego, realiza M búsquedas sobre elementos aleatorios escogidos con probabilidad uniforme.
+Realiza `N` inserciones eligiendo elementos aleatorios con probabilidad uniforme. Luego, realiza `M` búsquedas sobre elementos aleatorios escogidos con probabilidad uniforme.
 
 #### B: Inserción aleatoria, búsqueda sesgada
-Realiza N inserciones eligiendo elementos aleatorios con probabilidad uniforme. Luego, realiza M búsquedas sobre elementos aleatorios escogidos con la función P(i) definida anteriormente.
+Realiza `N` inserciones eligiendo elementos aleatorios con probabilidad uniforme. Luego, realiza `M` búsquedas sobre elementos aleatorios escogidos con la función `P(i)` definida anteriormente.
 
 #### C: Inserción ordenada, búsqueda uniforme
-Antes de insertar, ordena los elementos de menor a mayor y realiza N inserciones secuenciales. Luego, realiza M búsquedas sobre elementos aleatorios con probabilidad uniforme.
+Antes de insertar, ordena los elementos de menor a mayor y realiza `N` inserciones secuenciales. Luego, realiza `M` búsquedas sobre elementos aleatorios con probabilidad uniforme.
 
 #### D: Inserción ordenada, búsqueda sesgada
-Antes de insertar, ordena los elementos de menor a mayor y realiza N inserciones secuenciales. Luego, realiza M búsquedas sobre elementos aleatorios usando la función P(i) definida anteriormente.
+Antes de insertar, ordena los elementos de menor a mayor y realiza `N` inserciones secuenciales. Luego, realiza `M` búsquedas sobre elementos aleatorios usando la función `P(i)` definida anteriormente.
 
 Entrega una breve conclusión sobre los resultados obtenidos, comparándolos con las cotas conocidas para ambas estructuras.
 
 ### Teoremas y Naturaleza de los Splay Trees
-Además de los escenarios base, deberás comprobar el comportamiento de ambas estructuras frente a los dos teoremas enunciados anteriormente para un nuevo dataset N' con N=2^25 elementos aleatorios en el rango  [0, 4294967295] = [0, 2^32 − 1] generado por ti.
+Además de los escenarios base, deberás comprobar el comportamiento de ambas estructuras frente a los dos teoremas enunciados anteriormente para un nuevo dataset `N'` con `N=2^25` elementos aleatorios en el rango `[0, 4294967295] = [0, 2^32 − 1]` generado por ti.
 
-Luego de eso, deberás crear tanto un AVL tree como un Splay Tree para ambos experimentos, cuidando que los elementos hayan sido insertados en el mismo orden para cada uno de los 4 experimentos de esta sección.
+Luego de eso, deberás crear tanto un _AVL tree_ como un _Splay Tree_ para ambos experimentos, cuidando que los elementos hayan sido insertados en el mismo orden para cada uno de los `4` experimentos de esta sección.
 
 Finalmente, deberás mostrar el desempeño de ambas estructuras frente a los dos escenarios experimentales descritos a continuación en un gráfico de línea.
 
 #### Experimentos
 
 ##### A: Sequential Access Theorem
-Para los valores de m en {N/100, 2N/100, ..., 9N/100, 10N/100}, ejecuta una secuencia de m búsquedas de claves estrictamente crecientes no necesariamente equiespaciadas y grafica el tiempo de ejecución para cada valor de m en ambas estructuras.
+Para los valores de `m` en `{N/100, 2N/100, ..., 9N/100, 10N/100}`, ejecuta una secuencia de `m` búsquedas de claves estrictamente crecientes no necesariamente equiespaciadas y grafica el tiempo de ejecución para cada valor de `m` en ambas estructuras.
 
 Puedes controlar el crecimiento con algún parámetro o función a elección, pero se recomienda recorrer las claves aumentando su valor en un número fijo.
 
 ##### B: Working Set Theorem
-Para W en {10, 10^2, 10^3, ..., 10^6} genera un subconjunto W' (que es subconjunto de N') aleatorio de tamaño W (el working set) y realiza una secuencia de M = 10 * c * N búsquedas de elementos escogidos uniformemente al azar exclusivamente dentro de dicho subconjunto en ambos árboles y grafica el tiempo de ejecución para cada valor de W.
+Para `W` en `{10, 10^2, 10^3, ..., 10^6}` genera un subconjunto `W'` (que es subconjunto de `N'`) aleatorio de tamaño `W` (el _working set_) y realiza una secuencia de `M = 10 * c * N` búsquedas de elementos escogidos uniformemente al azar exclusivamente dentro de dicho subconjunto en ambos árboles y grafica el tiempo de ejecución para cada valor de `W`.
 
 #### Análisis de Resultados
-Para las secuencias de búsquedas del Sequential Access Theorem, comprueba que en el árbol AVL toman un tiempo de O(m * log n), mientras que el Splay Tree es capaz de aprovechar esta secuencia y resolverlas en O(m * log(n/m)),
+Para las secuencias de búsquedas del _Sequential Access Theorem_, comprueba que en el _árbol AVL_ toman un tiempo de `O(m * log(n))`, mientras que el _Splay Tree_ es capaz de aprovechar esta secuencia y resolverlas en `O(m * log(n/m))`.
 
-Para las secuencias de búsquedas del Working Set Theorem, comprueba que el costo escala como O(log W) en el Splay Tree, mientras que en el árbol AVL permanece como O(log n).
+Para las secuencias de búsquedas del _Working Set Theorem_, comprueba que el costo escala como `O(log W)` en el _Splay Tree_, mientras que en el _árbol AVL_ permanece como `O(log n)`.
 
 ### Bonus: Traversal Conjecture
-Así como existen muchos teoremas probados acerca del desempeño de los Splay Trees bajo ciertas condiciones, también quedan bastantes conjeturas sin probar (inclusive algunas se remontan a la presentación original de los Splay Trees en 1985). En particular, en esta sección se tratará la Traversal Conjecture.
+Así como existen muchos teoremas probados acerca del desempeño de los _Splay Trees_ bajo ciertas condiciones, también quedan bastantes conjeturas sin probar (inclusive algunas se remontan a la presentación original de los _Splay Trees_ en 1985). En particular, en esta sección se tratará la _Traversal Conjecture_.
 
 #### Enunciado
-La Traversal Conjecture postula que dados T_1, T_2 dos Splay Trees con los mismos elementos y dada S la secuencia obtenida producto de visitar todos los nodos de T_2 en preorden, el costo total de buscar secuencialmente los elementos de S en T_1 es O(n).
+La _Traversal Conjecture_ postula que dados `T_1`, `T_2` dos _Splay Trees_ con los mismos elementos y dada `S` la secuencia obtenida producto de visitar todos los nodos de `T_2` en preorden, el costo total de buscar secuencialmente los elementos de `S` en `T_1` es `O(n)`.
 
 #### Experimento
-Construye dos Splay Trees T_1 y T_2 de tamaño N = 2^25 cada uno, insertando los mismos elementos pero con distintas permutaciones (puedes reutilizar el dataset N'). Luego, ejecuta un recorrido completo en algún orden a elección (preorden, inorden o postorden) sobre T_1, para luego buscar esa misma secuencia en T_2.
+Construye dos _Splay Trees_ `T_1` y `T_2` de tamaño `N = 2^25` cada uno, insertando los mismos elementos pero con distintas permutaciones (puedes reutilizar el dataset `N'`). Luego, ejecuta un recorrido completo en algún orden a elección (preorden, inorden o postorden) sobre `T_1`, para luego buscar esa misma secuencia en `T_2`.
 
 Entrega el costo total de este proceso, muestra los tiempos de cada búsqueda en un gráfico de línea y emite una conclusión evaluando empíricamente la conjetura con respecto a los resultados obtenidos.
 
 ## Entregables
 
 ### Código
-Debes entregar el código fuente en ./src escrito en C++ 17 compilable mediante ./Makefile. Una carpeta ./plots con código fuente en Python 3 para generar los gráficos junto a ./requirements.txt para instalar el entorno pip del código Python.
+Debes entregar el código fuente en `./src` escrito en `C++ 17` compilable mediante `./Makefile`. Una carpeta `./plots` con código fuente en `Python 3` para generar los gráficos junto a `./requirements.txt` para instalar el entorno pip del código Python.
 
 La entrega de código debe contener:
 
-- README: Archivo con las instrucciones claras para compilar y ejecutar el código. Debe ser lo suficientemente explicativo para que cualquier persona pueda ejecutar la totalidad de sus experimentos 
+- `README`: Archivo con las instrucciones claras para compilar y ejecutar el código. Debe ser lo suficientemente explicativo para que cualquier persona pueda ejecutar la totalidad de sus experimentos 
 - Firmas: Cada estructura de datos y función relevante debe tener una descripción de su propósito, parámetros de entrada y salida.
-- Implementación AVL: Inserción, búsqueda y rotaciones correctas. Preserva el invariante descrito.
-- Implementación Splay Tree: Inserción, búsqueda, rotaciones y el método splay son correctas.
-- Experimentos: Creación correcta de los 4 escenarios base y los 2 generadores de secuencias para los teoremas.
+- Implementación _AVL_: Inserción, búsqueda y rotaciones correctas. Preserva el _invariante_ descrito.
+- Implementación _Splay Tree_: Inserción, búsqueda, rotaciones y el método `splay` son correctas.
+- Experimentos: Creación correcta de los `4` escenarios base y los `2` generadores de secuencias para los teoremas.
 - Obtención de resultados: La forma en la que se miden los tiempos es rigurosa y suficiente para emitir conclusiones.
-- Main: Un archivo principal o parte del código (una función main) que permita ejecutar toda la batería de tests sin modificar el código.
+- `Main`: Un archivo principal o parte del código (una función `main`) que permita ejecutar toda la batería de tests sin modificar el código.
 - Bonus: Implementación, testeo y conclusión correspondiente al experimento.
 
 ### Reporte
-Debes escribir un reporte en formato markdown, este debe ser claro, analítico y conciso. Debe contener:
+Debes escribir un reporte en formato _markdown_, este debe ser claro, analítico y conciso. Debe contener:
 
 - Introducción: Presentación del tema en estudio y resumen de lo que se abordará en el informe.
 - Desarrollo: Breve explicación de las estructuras y cómo funcionan. Dado que el equipo revisor ya conoce la teoría, enfócate en explicar tus decisiones de implementación. En esta sección debes incluir las constantes y funciones determinadas para su implementación.
@@ -268,9 +268,8 @@ Debes escribir un reporte en formato markdown, este debe ser claro, analítico y
 - Conclusión: Recapitulación del trabajo. Conclusión final sobre el desempeño de ambas estructuras.
 
 ## Recomendaciones
-- Programa los métodos de rotación primero en los Splay Trees de modo que puedan ser replicados para los árboles AVL y así ahorrar trabajo.
+- Programa los métodos de rotación primero en los _Splay Trees_ de modo que puedan ser replicados para los _árboles AVL_ y así ahorrar trabajo.
 - En los gráficos de línea incluye las funciones de las cotas teóricas multiplicadas por alguna constante a determinar que permita comparar más simplemente los resultados obtenidos.
-- Mucho cuidado con la notación de los árboles AVL: Recuerda que BF > 0 significa un desbalance hacia la izquierda, mientras que BF < 0 significa un desbalance hacia la derecha. Se menciona esto pues podría ser un poco contrario a la intuición.
-- Notar que los experimentos de la sección 7.3 (Experimentos: Sequential Access Theorem y Working Set Theorem) requieren la construcción de 4 árboles de tamaño aproximadamente 2^25 nodos, lo que dependiendo de su implementación, podría traducirse en aproximadamente
-4 GB de RAM.
+- Mucho cuidado con la notación de los _árboles AVL_: Recuerda que `BF > 0` significa un desbalance hacia la izquierda, mientras que `BF < 0` significa un desbalance hacia la derecha. Se menciona esto pues podría ser un poco contrario a la intuición.
+- Notar que los experimentos de la sección 7.3 (Experimentos: _Sequential Access Theorem_ y _Working Set Theorem_) requieren la construcción de `4` árboles de tamaño aproximadamente `2^25` nodos, lo que dependiendo de su implementación, podría traducirse en aproximadamente `4 GB` de RAM.
 - Se adjunta la publicación original en el siguiente enlace: https://www.cs.cmu.edu/~sleator/papers/self-adjusting.pdf
