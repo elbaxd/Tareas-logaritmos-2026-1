@@ -1,5 +1,7 @@
 #include "splay.hpp"
 
+#include <vector>
+
 Node* SplayTree::rotateZig(Node* y) {
     Node* x = y->left;
     y->left = x->right;
@@ -93,9 +95,15 @@ void SplayTree::clear() {
     root = nullptr;
 }
 
-void SplayTree::clear(Node* n) {
-    if (!n) return;
-    clear(n->left);
-    clear(n->right);
-    delete n;
+void SplayTree::clear(Node* root) {
+    if (!root) return;
+    std::vector<Node*> stack;
+    stack.push_back(root);
+    while (!stack.empty()) {
+        Node* cur = stack.back();
+        stack.pop_back();
+        if (cur->left) stack.push_back(cur->left);
+        if (cur->right) stack.push_back(cur->right);
+        delete cur;
+    }
 }

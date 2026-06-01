@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, sys
 
 RESULTS = os.path.join(os.path.dirname(__file__), '..', 'results')
 try:

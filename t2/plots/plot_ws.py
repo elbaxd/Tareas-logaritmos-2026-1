@@ -2,10 +2,14 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, sys
 
 RESULTS = os.path.join(os.path.dirname(__file__), '..', 'results')
-df = pd.read_csv(os.path.join(RESULTS, 'ws_results.csv'))
+csv_path = os.path.join(RESULTS, 'ws_results.csv')
+if not os.path.exists(csv_path) or os.path.getsize(csv_path) == 0:
+    print('ws_results.csv missing or empty, skipping.')
+    sys.exit(0)
+df = pd.read_csv(csv_path)
 
 N = 33554432
 fig, ax = plt.subplots(figsize=(8, 5))

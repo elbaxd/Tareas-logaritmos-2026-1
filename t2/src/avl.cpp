@@ -1,5 +1,7 @@
 #include "avl.hpp"
 
+#include <vector>
+
 Node* AVL::rotateZig(Node* y) {
     Node* x = y->left;
     y->left = x->right;
@@ -81,9 +83,15 @@ void AVL::clear() {
     root = nullptr;
 }
 
-void AVL::clear(Node* n) {
-    if (!n) return;
-    clear(n->left);
-    clear(n->right);
-    delete n;
+void AVL::clear(Node* root) {
+    if (!root) return;
+    std::vector<Node*> stack;
+    stack.push_back(root);
+    while (!stack.empty()) {
+        Node* cur = stack.back();
+        stack.pop_back();
+        if (cur->left) stack.push_back(cur->left);
+        if (cur->right) stack.push_back(cur->right);
+        delete cur;
+    }
 }
