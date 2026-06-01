@@ -1,7 +1,7 @@
 # Instrucción
 
 ## Contexto
-El _árbol AVL_ fue presentado en 1962 como el primer _árbol de búsqueda binaria autobalanceable_, es decir, que está constantemente equilibrado. Esto lo consigue mediante una variable adicional denominada _Balance Factor_ (en español, _Factor de Equilibrio_) la cual almacena toda la información necesaria para saber si los hijos de cada nodo están o no balanceados. Lo anterior permite conseguir un costo de `O(log n)` para búsqueda, inserción y eliminación tanto promedio como peor caso al mantener una altura máxima de aproximadamente `3/2 * log_2(n)` para cada nodo.
+El _árbol AVL_ fue presentado en 1962 como el primer _árbol de búsqueda binaria autobalanceable_, es decir, que está constantemente equilibrado. Esto lo consigue mediante una variable adicional denominada _Balance Factor_ (en español, _Factor de Equilibrio_) la cual almacena toda la información necesaria para saber si los hijos de cada nodo están o no balanceados. Lo anterior permite conseguir un costo de `O(log(n))` para búsqueda, inserción y eliminación tanto promedio como peor caso al mantener una altura máxima de aproximadamente `3/2 * log_2(n)` para cada nodo.
 
 El _Splay Tree_ es otra estructura de _árbol de búsqueda binaria autobalanceable_, la cual, sin la necesidad de almacenar información adicional para mantener el equilibrio, alcanza un costo amortizado de `O(log(n))` para las mismas tres operaciones. Es más, para una secuencia de accesos a nodos con distintas probabilidades tiene un costo amortizado de `O(K)`, donde `K` es la _entropía_ de esas probabilidades (visto en detalle más adelante).
 
@@ -156,7 +156,7 @@ Una consecuencia directa de este resultado es el _Sequential Access Theorem_: si
 ### Working Set Theorem
 El _Working Set Theorem_ establece que el costo de acceder al elemento `x` en el instante `t` es el `O(log(t(x) + 1))`, donde `t(x)` denota el número de elementos distintos accedidos entre la última vez que se accedió a `x` y el instante actual. A este valor se le denomina el tamaño del _working set_ de `x` en el instante `t`.
 
-Intuitivamente, los elementos accedidos recientemente ascienden hacia la raíz y son baratos de volver a acceder. Más formalmente, si una aplicación trabaja repetidamente sobre un subconjunto activo de `W` elementos (el _working set_), el costo amortizado por acceso en un _Splay Tree_ de `n` nodos será `O(log W)` en lugar de `O(log n)`.
+Intuitivamente, los elementos accedidos recientemente ascienden hacia la raíz y son baratos de volver a acceder. Más formalmente, si una aplicación trabaja repetidamente sobre un subconjunto activo de `W` elementos (el _working set_), el costo amortizado por acceso en un _Splay Tree_ de `n` nodos será `O(log W)` en lugar de `O(log(n))`.
 
 ## Implementación
 
@@ -229,7 +229,7 @@ Para `W` en `{10, 10^2, 10^3, ..., 10^6}` genera un subconjunto `W'` (que es sub
 #### Análisis de Resultados
 Para las secuencias de búsquedas del _Sequential Access Theorem_, comprueba que en el _árbol AVL_ toman un tiempo de `O(m * log(n))`, mientras que el _Splay Tree_ es capaz de aprovechar esta secuencia y resolverlas en `O(m * log(n/m))`.
 
-Para las secuencias de búsquedas del _Working Set Theorem_, comprueba que el costo escala como `O(log W)` en el _Splay Tree_, mientras que en el _árbol AVL_ permanece como `O(log n)`.
+Para las secuencias de búsquedas del _Working Set Theorem_, comprueba que el costo escala como `O(log W)` en el _Splay Tree_, mientras que en el _árbol AVL_ permanece como `O(log(n))`.
 
 ### Bonus: Traversal Conjecture
 Así como existen muchos teoremas probados acerca del desempeño de los _Splay Trees_ bajo ciertas condiciones, también quedan bastantes conjeturas sin probar (inclusive algunas se remontan a la presentación original de los _Splay Trees_ en 1985). En particular, en esta sección se tratará la _Traversal Conjecture_.
